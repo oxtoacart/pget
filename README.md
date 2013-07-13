@@ -31,7 +31,7 @@ note - code coverage styling is currently broken.
 
 pget is built using <a href="http://www.gradle.org/">Gradle</a>.
 
-## ParallelHttpGetInputStream
+## [ParallelHttpGetInputStream](http://oxtoacart.github.io/pget/javadoc/org/oxcart/streams/ParallelHttpGetInputStream.html)
 
 This class implements the parallel HTTP Get functionality and can be used as an InputStream by any program.
 
