@@ -15,7 +15,7 @@ import org.apache.commons.codec.binary.Hex;
  * @author ox.to.a.cart /at/ gmail.com
  * 
  */
-public class ChecksummingInputStream extends IValidatingInputStream {
+public class ChecksummingInputStream extends ValidatingInputStream {
     private InputStream originalStream;
     private MessageDigest digester;
     private byte[] expectedChecksum;
