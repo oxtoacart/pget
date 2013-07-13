@@ -21,7 +21,7 @@ cd pget
 
 [JavaDoc](http://oxtoacart.github.io/pget/javadoc/index.html)
 [Test Reports](http://oxtoacart.github.io/pget/tests/index.html)
-[Code Coverage](oxtoacart.github.io/pget/jacoco/test/html/index.html)
+[Code Coverage](http://oxtoacart.github.io/pget/jacoco/test/html/index.html)
 
 ## Building
 
