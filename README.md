@@ -35,15 +35,15 @@ pget is built using <a href="http://www.gradle.org/">Gradle</a>.
 
 This class implements the parallel HTTP Get functionality and can be used as an InputStream by any program.
 
-## ReadAheadInputStream
+## [ReadAheadInputStream](http://oxtoacart.github.io/pget/javadoc/org/oxcart/streams/ReadAheadInputStream.html)
 
 This class provides an InputStream that reads its content as fast as it can and buffers it locally.  This is useful for slow readers who may be temporarily blocking on some other I/O.  It is used by ParallelHttpGetInputStream to fetch the multiple parts of the file in the background.
 
-## MergedInputStream
+## [MergedInputStream](http://oxtoacart.github.io/pget/javadoc/org/oxcart/streams/MergedInputStream.html)
 
 This InputStream merges multiple independent InputStreams.  It is used by ParallelHttpGetInputStream to reassemble the portions of the file that were fetched in parallel.
 
-## ChecksummingInputStream
+## [ChecksummingInputStream](http://oxtoacart.github.io/pget/javadoc/org/oxcart/streams/ChecksummingInputStream.html)
 
 This InputStream calculates a checksum of data consumed out of an underlying InputStream and validates the checksum against a provided value when finished.
 
