@@ -42,27 +42,7 @@ public class MergedInputStreamTest extends StreamTest {
     }
 
     @Test
-    public void testCloseAfterFullRead() throws Exception {
-        MockInputStream[] mockStreams = new MockInputStream[] {
-                new MockInputStream(false, false),
-                new MockInputStream(false, false),
-                new MockInputStream(false, false)
-        };
-        MergedInputStream stream = new MergedInputStream(mockStreams);
-        while (stream.read() != -1) {
-            // read until we're done
-        }
-
-        assertTrue("The first underlying stream should automatically be closed by the time that we've finished reading from the MergedInputStream",
-                   mockStreams[0].wasCloseCalled());
-        assertTrue("The second underlying stream should automatically be closed by the time that we've finished reading from the MergedInputStream",
-                   mockStreams[1].wasCloseCalled());
-        assertTrue("The third underlying stream should automatically be closed by the time that we've finished reading from the MergedInputStream",
-                   mockStreams[2].wasCloseCalled());
-    }
-
-    @Test
-    public void testCloseBeforeRead() throws Exception {
+    public void testClose() throws Exception {
         MockInputStream[] mockStreams = new MockInputStream[] {
                 new MockInputStream(false, false),
                 new MockInputStream(false, false),
@@ -77,27 +57,7 @@ public class MergedInputStreamTest extends StreamTest {
     }
 
     @Test
-    public void testCloseFailureDuringRead() throws Exception {
-        MockInputStream[] mockStreams = new MockInputStream[] {
-                new MockInputStream(false, true),
-                new MockInputStream(false, true),
-                new MockInputStream(false, true)
-        };
-        MergedInputStream stream = new MergedInputStream(mockStreams);
-        try {
-            while (stream.read() != -1) {
-                // read until we're done
-            }
-            fail("Exception on underlying close should have propagated");
-        } catch (IOException ioe) {
-            assertEquals("Exception thrown on close() should have the right message",
-                         MockInputStream.CLOSE_FAILURE_MESSAGE,
-                         ioe.getMessage());
-        }
-    }
-
-    @Test
-    public void testCloseFailureBeforeRead() throws Exception {
+    public void testCloseFailure() throws Exception {
         MockInputStream[] mockStreams = new MockInputStream[] {
                 new MockInputStream(false, true),
                 new MockInputStream(false, true),

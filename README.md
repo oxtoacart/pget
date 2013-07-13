@@ -17,10 +17,15 @@ cd pget
 ./pget -c 04a1b0fc8a98999c6f78b35df9d8296996b5f6107c1b7f179c26a0496895b03f "https://lantern.s3.amazonaws.com/lantern-video-broadband.m4v" "https://dl.dropboxusercontent.com/s/rxnpmdrs2jms193/lantern-video-broadband.m4v" > /tmp/downloaded_file.m4v
 ```
 
-## Reports
+## Reports and Documentation
 
-<a href="build/reports/tests/index.html">Test Reports</a>
-<a href="build/reports/jacoco/test/html/index.html">Code Coverage</a>
+<a href="oxtoacart.github.io/pget/javadoc/index.html">JavaDoc</a>
+<a href="oxtoacart.github.io/pget/tests/index.html">Test Reports</a>
+<a href="oxtoacart.github.io/pget/jacoco/test/html/index.html">Code Coverage</a>
+
+## Building
+
+pget is built using <a href="http://www.gradle.org/">Gradle</a>.
 
 ## ParallelHttpGetInputStream
 
@@ -52,3 +57,5 @@ HTTP HEAD Request with HTTPClient - http://stackoverflow.com/questions/7822432/h
 HTTP Range Requests - http://stackoverflow.com/questions/8293687/sample-http-range-request-session
 
 HTTP Accept-Ranges Header - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.5
+
+Setting up GitHub Pages - https://help.github.com/articles/creating-project-pages-manually

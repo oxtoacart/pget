@@ -11,6 +11,7 @@ import java.util.Stack;
  * 
  */
 public class MergedInputStream extends InputStream {
+    private Stack<InputStream> allStreams = new Stack<InputStream>();
     private Stack<InputStream> remainingStreams = new Stack<InputStream>();
     private InputStream currentStream;
     private int bytesRead = 0;
@@ -18,7 +19,9 @@ public class MergedInputStream extends InputStream {
     public MergedInputStream(InputStream... originalStreams) {
         // Add streams to stack backwards so that we pop() them in the same order as given.
         for (int i = originalStreams.length - 1; i >= 0; i--) {
-            remainingStreams.push(originalStreams[i]);
+            InputStream originalStream = originalStreams[i];
+            allStreams.push(originalStream);
+            remainingStreams.push(originalStream);
         }
     }
 
@@ -26,10 +29,6 @@ public class MergedInputStream extends InputStream {
     public int read() throws IOException {
         int result;
         while (currentStream == null || (result = currentStream.read()) == -1) {
-            if (currentStream != null) {
-                // close the current stream
-                currentStream.close();
-            }
             if (remainingStreams.isEmpty()) {
                 // We're done
                 return -1;
@@ -47,23 +46,16 @@ public class MergedInputStream extends InputStream {
      */
     @Override
     public void close() throws IOException {
-        //
-        try {
-            if (currentStream != null) {
-                currentStream.close();
+        IOException closeException = null;
+        for (InputStream stream : allStreams) {
+            try {
+                stream.close();
+            } catch (IOException ioe) {
+                closeException = ioe;
             }
-        } finally {
-            IOException closeException = null;
-            while (!remainingStreams.isEmpty()) {
-                try {
-                    remainingStreams.pop().close();
-                } catch (IOException ioe) {
-                    closeException = ioe;
-                }
-            }
-            if (closeException != null) {
-                throw closeException;
-            }
+        }
+        if (closeException != null) {
+            throw closeException;
         }
     }
 
