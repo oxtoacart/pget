@@ -1,0 +1,35 @@
+sourceCompatibility = 1.6
+version = '0.1'
+
+apply plugin: 'java'
+
+repositories { mavenCentral() }
+
+dependencies {
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.6'
+    compile group: 'commons-io', name: 'commons-io', version: '2.4'
+    compile group: 'commons-logging', name: 'commons-logging', version: '1.1.1'
+    compile group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.2.5'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.5'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient-cache', version: '4.2.5'
+    compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.2.4'
+    compile group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.2.5'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+jar {
+    // On building jar, include classes from dependencies in our jar
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+
+    manifest { attributes("Main-Class": "org.oxcart.pget.PGet") }
+}
+
+task example(type:Exec, dependsOn:jar) {
+    commandLine 'time',
+            './pget',
+            '-c', '04a1b0fc8a98999c6f78b35df9d8296996b5f6107c1b7f179c26a0496895b03f',
+            '-o', '/tmp/example.m4v',
+            "https://lantern.s3.amazonaws.com/lantern-video-broadband.m4v",
+            "https://dl.dropboxusercontent.com/s/rxnpmdrs2jms193/lantern-video-broadband.m4v"
+}
