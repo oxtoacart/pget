@@ -33,7 +33,11 @@ This InputStream calculates a checksum of data consumed out of an underlying Inp
 
 ## Dependencies
 
-## Acknowledgment
+See <a href="blob/master/build.gradle">build.gradle</a> for all dependencies.
+
+## Acknowledgments
+The following articles were helpful in writing pget.
+
 Multi-Threading with HTTPClient - http://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html#d5e639
 
 HTTP HEAD Request with HTTPClient - http://stackoverflow.com/questions/7822432/how-to-implement-the-head-method-of-httpclient
