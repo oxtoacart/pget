@@ -1,10 +1,6 @@
 pget
 ====
 
-Parallel HTTP GET written in Java, including various helper streams
-
-## pget
-
 This utility provides a parallel HTTP GET that can download a single file from multiple locations.  To get help on the command, run:
 
 pget -?
