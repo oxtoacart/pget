@@ -33,7 +33,7 @@ This InputStream calculates a checksum of data consumed out of an underlying Inp
 
 ## Dependencies
 
-See <a href="blob/master/build.gradle">build.gradle</a> for all dependencies.
+See <a href="build.gradle">build.gradle</a> for all dependencies.
 
 ## Acknowledgments
 The following articles were helpful in writing pget.
