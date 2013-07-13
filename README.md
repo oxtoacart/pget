@@ -5,7 +5,7 @@ This utility provides a parallel HTTP GET that can download a single file from m
 
 pget -?
 
-In addition to being a utility, the core functionality is also available for use as a library via the [ParallelHttpGetInputStream](http://oxtoacart.github.io/pget/javadoc/org/oxcart/streams/ParallelHttpGetInputStream.html) class.
+In addition to being a utility, the core functionality is also available for use as a library via the [ParallelHttpGetInputStream](#parallelhttpgetinputstream) class.
 
 ## Quick Start
 
