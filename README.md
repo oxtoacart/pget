@@ -5,6 +5,8 @@ This utility provides a parallel HTTP GET that can download a single file from m
 
 pget -?
 
+In addition to being a utility, the core functionality is also available for use as a library via the [ParallelHttpGetInputStream](http://oxtoacart.github.io/pget/javadoc/org/oxcart/streams/ParallelHttpGetInputStream.html) class.
+
 ## Quick Start
 
 This quick start shows you how to get pget, download a file from two separate locations in parallel and pipe it into /tmp/downloaded_file.m4v.
