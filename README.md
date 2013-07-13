@@ -23,7 +23,7 @@ cd pget
 [Test Reports](http://oxtoacart.github.io/pget/tests/index.html)
 [Code Coverage](http://oxtoacart.github.io/pget/jacoco/test/html/index.html)
 
-* Note - code coverage styling is currently broken.
+note - code coverage styling is currently broken.
 
 ## Building
 
