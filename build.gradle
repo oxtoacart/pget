@@ -2,6 +2,7 @@ sourceCompatibility = 1.6
 version = '0.1'
 
 apply plugin: 'java'
+apply plugin: 'jacoco'
 
 repositories { mavenCentral() }
 
@@ -16,6 +17,7 @@ dependencies {
     compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.2.4'
     compile group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.2.5'
     testCompile group: 'junit', name: 'junit', version: '4.+'
+    testCompile group: 'com.github.tomakehurst', name: 'wiremock', version: '1.33'
 }
 
 jar {
@@ -32,4 +34,11 @@ task example(type:Exec, dependsOn:jar) {
             '-o', '/tmp/example.m4v',
             "https://lantern.s3.amazonaws.com/lantern-video-broadband.m4v",
             "https://dl.dropboxusercontent.com/s/rxnpmdrs2jms193/lantern-video-broadband.m4v"
+}
+
+// Courtesy of this - http://forums.gradle.org/gradle/topics/_1_6_rc_1_jacoco_plugin_does_not_show_line_numbers
+jacocoTestReport {
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
 }

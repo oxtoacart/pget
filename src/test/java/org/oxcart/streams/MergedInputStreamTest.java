@@ -2,12 +2,14 @@ package org.oxcart.streams;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.oxcart.streams.MergedInputStream;
 
 /**
  * @author ox.to.a.cart /at/ gmail.com
@@ -36,7 +38,105 @@ public class MergedInputStreamTest extends StreamTest {
                           bunchOfBytes, actualResult);
 
         assertEquals("Reported bytes should match actual bytes read", inputStream.getBytesRead(), actualResult.length);
+        inputStream.close();
     }
 
-    // TODO: add failure mode test cases
+    @Test
+    public void testCloseAfterFullRead() throws Exception {
+        MockInputStream[] mockStreams = new MockInputStream[] {
+                new MockInputStream(false, false),
+                new MockInputStream(false, false),
+                new MockInputStream(false, false)
+        };
+        MergedInputStream stream = new MergedInputStream(mockStreams);
+        while (stream.read() != -1) {
+            // read until we're done
+        }
+
+        assertTrue("The first underlying stream should automatically be closed by the time that we've finished reading from the MergedInputStream",
+                   mockStreams[0].wasCloseCalled());
+        assertTrue("The second underlying stream should automatically be closed by the time that we've finished reading from the MergedInputStream",
+                   mockStreams[1].wasCloseCalled());
+        assertTrue("The third underlying stream should automatically be closed by the time that we've finished reading from the MergedInputStream",
+                   mockStreams[2].wasCloseCalled());
+    }
+
+    @Test
+    public void testCloseBeforeRead() throws Exception {
+        MockInputStream[] mockStreams = new MockInputStream[] {
+                new MockInputStream(false, false),
+                new MockInputStream(false, false),
+                new MockInputStream(false, false)
+        };
+        MergedInputStream stream = new MergedInputStream(mockStreams);
+        stream.close();
+
+        assertTrue("The first underlying stream should have been closed", mockStreams[0].wasCloseCalled());
+        assertTrue("The second underlying stream should have been closed", mockStreams[1].wasCloseCalled());
+        assertTrue("The third underlying stream should have been closed", mockStreams[2].wasCloseCalled());
+    }
+
+    @Test
+    public void testCloseFailureDuringRead() throws Exception {
+        MockInputStream[] mockStreams = new MockInputStream[] {
+                new MockInputStream(false, true),
+                new MockInputStream(false, true),
+                new MockInputStream(false, true)
+        };
+        MergedInputStream stream = new MergedInputStream(mockStreams);
+        try {
+            while (stream.read() != -1) {
+                // read until we're done
+            }
+            fail("Exception on underlying close should have propagated");
+        } catch (IOException ioe) {
+            assertEquals("Exception thrown on close() should have the right message",
+                         MockInputStream.CLOSE_FAILURE_MESSAGE,
+                         ioe.getMessage());
+        }
+    }
+
+    @Test
+    public void testCloseFailureBeforeRead() throws Exception {
+        MockInputStream[] mockStreams = new MockInputStream[] {
+                new MockInputStream(false, true),
+                new MockInputStream(false, true),
+                new MockInputStream(false, true)
+        };
+        MergedInputStream stream = new MergedInputStream(mockStreams);
+        try {
+            stream.close();
+            fail("Exception on underlying close should have propagated");
+        } catch (IOException ioe) {
+            assertEquals("Exception thrown on close() should have the right message",
+                         MockInputStream.CLOSE_FAILURE_MESSAGE,
+                         ioe.getMessage());
+            assertTrue("The first underlying stream should have been closed", mockStreams[0].wasCloseCalled());
+            assertTrue("The second underlying stream should have been closed", mockStreams[1].wasCloseCalled());
+            assertTrue("The third underlying stream should have been closed", mockStreams[2].wasCloseCalled());
+        }
+    }
+
+    @Test
+    public void testReadFailure() throws Exception {
+        MockInputStream[] mockStreams = new MockInputStream[] {
+                new MockInputStream(true, false),
+                new MockInputStream(true, false),
+                new MockInputStream(true, false)
+        };
+        MergedInputStream stream = new MergedInputStream(mockStreams);
+        try {
+            stream.read();
+            fail("Trying to read from an underlying FailingStream should have thrown an exception");
+        } catch (IOException ioe) {
+            assertEquals("Exception thrown on read() should have the right message",
+                         MockInputStream.READ_FAILURE_MESSAGE,
+                         ioe.getMessage());
+        } finally {
+            stream.close();
+            assertTrue("The first underlying stream should have been closed", mockStreams[0].wasCloseCalled());
+            assertTrue("The second underlying stream should have been closed", mockStreams[1].wasCloseCalled());
+            assertTrue("The third underlying stream should have been closed", mockStreams[2].wasCloseCalled());
+        }
+    }
 }

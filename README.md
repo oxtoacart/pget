@@ -9,11 +9,22 @@ This utility provides a parallel HTTP GET that can download a single file from m
 
 pget -?
 
-### Example Usage
+## Quick Start
 
-The below command downloads a file from two separate locations in parallel and pipes it into /tmp/downloaded_file.m4v.
+This quick start shows you how to get pget, download a file from two separate locations in parallel and pipe it into /tmp/downloaded_file.m4v.
 
-pget -c 04a1b0fc8a98999c6f78b35df9d8296996b5f6107c1b7f179c26a0496895b03f "https://lantern.s3.amazonaws.com/lantern-video-broadband.m4v" "https://dl.dropboxusercontent.com/s/rxnpmdrs2jms193/lantern-video-broadband.m4v" > /tmp/downloaded_file.m4v
+From a UNIX shell:
+
+```bash
+git clone https://github.com/oxtoacart/pget.git
+cd pget
+./pget -c 04a1b0fc8a98999c6f78b35df9d8296996b5f6107c1b7f179c26a0496895b03f "https://lantern.s3.amazonaws.com/lantern-video-broadband.m4v" "https://dl.dropboxusercontent.com/s/rxnpmdrs2jms193/lantern-video-broadband.m4v" > /tmp/downloaded_file.m4v
+```
+
+## Reports
+
+<a href="build/reports/tests/index.html">Test Reports</a>
+<a href="build/reports/jacoco/test/html/index.html">Code Coverage</a>
 
 ## ParallelHttpGetInputStream
 

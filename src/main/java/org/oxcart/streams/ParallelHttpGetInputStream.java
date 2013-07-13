@@ -196,6 +196,12 @@ public class ParallelHttpGetInputStream extends IValidatingInputStream implement
             HttpGet method = new HttpGet(url);
             method.addHeader("Range", String.format("bytes=%1$s-%2$s", start, end - 1));
             HttpResponse response = httpClient.execute(method, context);
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != 206) {
+                throw new IOException(
+                                      String.format("Unrecognized response on attempting to issue range GET. Expected 206, got %1$s",
+                                                    statusCode));
+            }
             return response.getEntity().getContent();
         }
 

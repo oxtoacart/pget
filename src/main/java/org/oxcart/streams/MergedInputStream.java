@@ -26,6 +26,10 @@ public class MergedInputStream extends InputStream {
     public int read() throws IOException {
         int result;
         while (currentStream == null || (result = currentStream.read()) == -1) {
+            if (currentStream != null) {
+                // close the current stream
+                currentStream.close();
+            }
             if (remainingStreams.isEmpty()) {
                 // We're done
                 return -1;
@@ -33,9 +37,7 @@ public class MergedInputStream extends InputStream {
             // Move on to next stream
             currentStream = remainingStreams.pop();
         }
-        if (result != -1) {
-            bytesRead += 1;
-        }
+        bytesRead += 1;
         return result;
     }
 

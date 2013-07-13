@@ -68,8 +68,8 @@ public class ReadAheadInputStream extends InputStream implements Runnable {
             } finally {
                 try {
                     originalStream.close();
-                } catch (Exception e) {
-                    // ignore
+                } catch (IOException ioeClose) {
+                    readAheadException.compareAndSet(null, ioeClose);
                 }
             }
         } catch (IOException ioe) {

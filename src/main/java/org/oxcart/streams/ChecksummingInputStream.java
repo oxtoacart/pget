@@ -46,8 +46,11 @@ public class ChecksummingInputStream extends IValidatingInputStream {
 
     @Override
     public void close() throws IOException {
-        originalStream.close();
-        super.close();
+        try {
+            super.close();
+        } finally {
+            originalStream.close();
+        }
     }
 
     @Override
