@@ -23,6 +23,8 @@ cd pget
 [Test Reports](http://oxtoacart.github.io/pget/tests/index.html)
 [Code Coverage](http://oxtoacart.github.io/pget/jacoco/test/html/index.html)
 
+* Note - code coverage styling is currently broken.
+
 ## Building
 
 pget is built using <a href="http://www.gradle.org/">Gradle</a>.
