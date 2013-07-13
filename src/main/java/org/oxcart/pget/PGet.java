@@ -20,8 +20,8 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.oxcart.streams.ChecksummingInputStream;
 import org.oxcart.streams.IProgressRecorder;
-import org.oxcart.streams.ValidatingInputStream;
 import org.oxcart.streams.ParallelHttpGetInputStream;
+import org.oxcart.streams.ValidatingInputStream;
 
 /**
  * <p>
@@ -43,11 +43,13 @@ import org.oxcart.streams.ParallelHttpGetInputStream;
  * 
  */
 public class PGet {
+    private static final String SHA_256 = "SHA-256";
+
     private Options options;
     private CommandLine commandLine;
     private AtomicBoolean finished = new AtomicBoolean(false);
 
-    public PGet(String[] args) {
+    public PGet(String... args) {
         options = new Options();
         options.addOption("?", "help", false, "Print this message");
         options.addOption("o", "outfile", true,
@@ -57,21 +59,24 @@ public class PGet {
         options.addOption("c", "checksum", true, "(Optional) SHA-256 checksum to use to validate result (hex encoded)");
         try {
             commandLine = new GnuParser().parse(options, args);
-        } catch (ParseException parseException) {
+        } catch (ParseException pe) {
             printUsage();
+            throw new RuntimeException("Unable to parse args: " + pe.getMessage(), pe);
         }
     }
 
     /**
      * Fetch the download per the specified command-line options.
      */
-    public void fetch() {
+    public int fetch() {
         String[] urls = commandLine.getArgs();
         if (commandLine.hasOption("help")) {
             printUsage();
+            return 0;
         } else if (urls.length == 0) {
             System.err.println("Please supply at least 1 url");
             printUsage();
+            return 1;
         } else {
             boolean valid = true;
             int numberOfThreads = urls.length;
@@ -84,10 +89,11 @@ public class PGet {
             } catch (Exception e) {
                 System.err.println(e.getMessage());
                 e.printStackTrace(System.err);
+                return 3;
             } finally {
                 executorService.shutdown();
             }
-            System.exit(valid ? 0 : 1);
+            return valid ? 0 : 2;
         }
     }
 
@@ -106,7 +112,7 @@ public class PGet {
         if (commandLine.hasOption("checksum")) {
             // Add SHA-256 checksumming
             try {
-                stream = new ChecksummingInputStream(parallelStream, "SHA-256",
+                stream = new ChecksummingInputStream(parallelStream, SHA_256,
                                                      Hex.decodeHex(commandLine.getOptionValue("checksum")
                                                                               .toCharArray()));
             } catch (NoSuchAlgorithmException nsae) {
@@ -210,6 +216,6 @@ public class PGet {
     }
 
     public static void main(String[] args) throws Exception {
-        new PGet(args).fetch();
+        System.exit(new PGet(args).fetch());
     }
 }

@@ -72,8 +72,8 @@ public class ReadAheadInputStream extends InputStream implements Runnable {
 <span class="pc" id="L72">                    readAheadException.compareAndSet(null, ioeClose);</span>
 <span class="pc" id="L73">                }</span>
 <span class="fc" id="L74">            }</span>
-<span class="nc" id="L75">        } catch (IOException ioe) {</span>
-<span class="nc" id="L76">            readAheadException.set(ioe);</span>
+<span class="fc" id="L75">        } catch (IOException ioe) {</span>
+<span class="fc" id="L76">            readAheadException.set(ioe);</span>
 <span class="nc" id="L77">        } catch (Exception e) {</span>
 <span class="nc" id="L78">            readAheadException.set(new IOException(e.getMessage(), e));</span>
         } finally {
