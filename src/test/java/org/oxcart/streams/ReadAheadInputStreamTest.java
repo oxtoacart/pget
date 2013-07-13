@@ -1,21 +1,13 @@
 package org.oxcart.streams;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -23,19 +15,6 @@ import org.junit.Test;
  * 
  */
 public class ReadAheadInputStreamTest extends StreamTest {
-
-    private ExecutorService executorService;
-
-    @Before
-    public void setUp() {
-        executorService = Executors.newSingleThreadExecutor();
-    }
-
-    @After
-    public void tearDown() {
-        // Shut down our ExecutorService so the program can end
-        executorService.shutdownNow();
-    }
 
     @Test
     public void testSuccess() throws Exception {

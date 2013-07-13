@@ -1,8 +1,9 @@
-sourceCompatibility = 1.6
+sourceCompatibility = JavaVersion.VERSION_1_6
 version = '0.1'
 
 apply plugin: 'java'
 apply plugin: 'jacoco'
+apply plugin: 'eclipse'
 
 repositories { mavenCentral() }
 

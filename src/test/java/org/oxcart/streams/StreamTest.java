@@ -2,8 +2,12 @@ package org.oxcart.streams;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Base class for tests on streams.
@@ -13,6 +17,18 @@ import org.apache.commons.io.IOUtils;
  */
 public abstract class StreamTest {
     protected final byte[] bunchOfBytes;
+    protected ExecutorService executorService;
+
+    @Before
+    public void setUpExecutorService() {
+        executorService = Executors.newSingleThreadExecutor();
+    }
+
+    @After
+    public void tearDownExecutorService() {
+        // Shut down our ExecutorService so the program can end
+        executorService.shutdownNow();
+    }
 
     public StreamTest() {
         bunchOfBytes = new byte[50000];

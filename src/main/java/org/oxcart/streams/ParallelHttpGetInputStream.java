@@ -27,7 +27,7 @@ import org.apache.http.protocol.HttpContext;
  * @author ox.to.a.cart /at/ gmail.com
  * 
  */
-public class ParallelHttpGetInputStream extends IValidatingInputStream implements IProgressProvider {
+public class ParallelHttpGetInputStream extends ValidatingInputStream implements IProgressReporter {
     private ExecutorService executorService;
     private HttpClient httpClient;
     private List<Resource> resources;
@@ -70,9 +70,9 @@ public class ParallelHttpGetInputStream extends IValidatingInputStream implement
     }
 
     @Override
-    public void provideProgress(IProgressReporter recorder) {
+    public void reportProgress(IProgressRecorder recorder) {
         for (int i = 0; i < contentInputStreams.size(); i++) {
-            recorder.report(resources.get(i).url,
+            recorder.record(resources.get(i).url,
                             "Buffered",
                             expectedContentLengths.get(i),
                             contentInputStreams.get(i).getBufferedBytes());
@@ -157,7 +157,6 @@ public class ParallelHttpGetInputStream extends IValidatingInputStream implement
     private class Resource {
         private String url;
         private HttpContext context;
-        private String transferEncoding = "";
         private int contentLength;
         private boolean acceptsRangeRequests;
 
@@ -171,9 +170,6 @@ public class ParallelHttpGetInputStream extends IValidatingInputStream implement
                 throw new IOException(
                                       String.format("Unrecognized response on attempting to get resource HEAD information. Expected 200, got %1$s",
                                                     statusCode));
-            }
-            if (response.containsHeader("Transfer-Encoding")) {
-                transferEncoding = response.getFirstHeader("Transfer-Encoding").getValue();
             }
             contentLength = Integer.parseInt(response.getFirstHeader("Content-Length").getValue());
             // Per RFC 2616, we assume that range requests are accepted unless the server explicitly says they aren't
@@ -206,16 +202,12 @@ public class ParallelHttpGetInputStream extends IValidatingInputStream implement
         }
 
         /**
-         * Two resources are considered compatible if their transfer encodings and content lengths match.
+         * Two resources are considered compatible if their content lengths match.
          * 
          * @param other
          * @return
          */
         public void ensureCompatibleWith(Resource other) throws IOException {
-            if (!transferEncoding.equals(other.transferEncoding)) {
-                throw new IOException(String.format("Transfer-Encoding for resources '%1$s' and '%2$s' did not match",
-                                                    url, other.url));
-            }
             if (contentLength != other.contentLength) {
                 throw new IOException(String.format("Content-Length for resources '%1$s' and '%2$s' did not match",
                                                     url, other.url));

@@ -1,23 +1,16 @@
 package org.oxcart.streams;
 
 /**
- * Callback for reporting progress.
+ * Interface for objects that can provide progress updates.
  * 
  * @author ox.to.a.cart /at/ gmail.com
  * 
  */
 public interface IProgressReporter {
     /**
-     * Report progress (e.g. by writing to System.err).
+     * Called to provide progress. This method needs to be thread-safe.
      * 
-     * @param name
-     *            name of the IProgressProvider
-     * @param category
-     *            category of the status being provided
-     * @param total
-     *            the total possible progress
-     * @param progress
-     *            progress up to this point
+     * @param recorder
      */
-    void report(String name, String category, double total, double progress);
+    void reportProgress(IProgressRecorder recorder);
 }

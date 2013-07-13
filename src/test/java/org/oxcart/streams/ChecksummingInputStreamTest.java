@@ -1,9 +1,6 @@
 package org.oxcart.streams;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -24,15 +21,14 @@ public class ChecksummingInputStreamTest extends StreamTest {
     public void testSHA256Success() throws Exception {
         MessageDigest digester = MessageDigest.getInstance("SHA-256");
         byte[] expectedDigest = digester.digest(bunchOfBytes);
-        ChecksummingInputStream stream = new ChecksummingInputStream(
-                                                                     new ByteArrayInputStream(bunchOfBytes),
+        ChecksummingInputStream stream = new ChecksummingInputStream(new ByteArrayInputStream(bunchOfBytes),
                                                                      "SHA-256",
                                                                      expectedDigest);
         try {
             while (stream.read() != -1) {
                 // Loop through the stream
             }
-            assertTrue("Stream should be valid", stream.valid());
+            assertTrue("Stream should be valid", stream.isValid());
         } finally {
             stream.close();
         }
@@ -44,15 +40,14 @@ public class ChecksummingInputStreamTest extends StreamTest {
         byte[] actualDigest = digester.digest(bunchOfBytes);
         byte[] intentionallyIncorrectDigest = Arrays.copyOf(actualDigest, actualDigest.length);
         intentionallyIncorrectDigest[0] = intentionallyIncorrectDigest[0] == 0 ? (byte) 1 : (byte) 0;
-        ChecksummingInputStream stream = new ChecksummingInputStream(
-                                                                     new ByteArrayInputStream(bunchOfBytes),
+        ChecksummingInputStream stream = new ChecksummingInputStream(new ByteArrayInputStream(bunchOfBytes),
                                                                      "SHA-256",
                                                                      intentionallyIncorrectDigest);
         try {
             while (stream.read() != -1) {
                 // Loop through the stream
             }
-            assertFalse("Stream should not be valid", stream.valid());
+            assertFalse("Stream should not be valid", stream.isValid());
             assertEquals(1, stream.getValidationErrors().size());
             String firstValidationError = stream.getValidationErrors().get(0);
             assertTrue("Error should contain expected digest as hex-encoded",

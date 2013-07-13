@@ -19,14 +19,18 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.oxcart.streams.ChecksummingInputStream;
-import org.oxcart.streams.IProgressReporter;
-import org.oxcart.streams.IValidatingInputStream;
+import org.oxcart.streams.IProgressRecorder;
+import org.oxcart.streams.ValidatingInputStream;
 import org.oxcart.streams.ParallelHttpGetInputStream;
 
 /**
- * <p>Downloads a file in parallel using one or more urls.</p>
+ * <p>
+ * Downloads a file in parallel using one or more urls.
+ * </p>
  * 
- * <p>For example:</p>
+ * <p>
+ * For example:
+ * </p>
  * 
  * <pre>
  * java org.oxcart.pget.PGet -c 04a1b0fc8a98999c6f78b35df9d8296996b5f6107c1b7f179c26a0496895b03f \
@@ -98,7 +102,7 @@ public class PGet {
     private boolean doFetch(ExecutorService executorService, String[] urls) throws IOException {
         boolean valid = false;
         ParallelHttpGetInputStream parallelStream = new ParallelHttpGetInputStream(executorService, urls);
-        IValidatingInputStream stream = parallelStream;
+        ValidatingInputStream stream = parallelStream;
         if (commandLine.hasOption("checksum")) {
             // Add SHA-256 checksumming
             try {
@@ -118,7 +122,7 @@ public class PGet {
             } else {
                 doFetchToStandardOut(stream);
             }
-            valid = stream.valid();
+            valid = stream.isValid();
             if (!valid) {
                 for (String errorMessage : stream.getValidationErrors()) {
                     System.err.println("WARNING: " + errorMessage);
@@ -140,14 +144,13 @@ public class PGet {
      * @param stream
      * @throws IOException
      */
-    private void doFetchToFile(IValidatingInputStream stream) throws IOException {
+    private void doFetchToFile(ValidatingInputStream stream) throws IOException {
         // Write to out file
         File file = new File(commandLine.getOptionValue("outfile"));
         if (file.exists()) {
             file.delete();
         }
-        BufferedOutputStream out = new BufferedOutputStream(
-                                                            new FileOutputStream(file));
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
         try {
             IOUtils.copy(stream, out);
         } finally {
@@ -161,7 +164,7 @@ public class PGet {
      * @param stream
      * @throws IOException
      */
-    private void doFetchToStandardOut(IValidatingInputStream stream) throws IOException {
+    private void doFetchToStandardOut(ValidatingInputStream stream) throws IOException {
         // Write to standard out
         IOUtils.copy(stream, System.out);
     }
@@ -175,9 +178,9 @@ public class PGet {
         new Thread() {
             @Override
             public void run() {
-                IProgressReporter reporter = new IProgressReporter() {
+                IProgressRecorder recorder = new IProgressRecorder() {
                     @Override
-                    public void report(String name, String category, double total, double progress) {
+                    public void record(String name, String category, double total, double progress) {
                         System.err.println(String.format("%1$s (%2$s) %3$.0f %%", name, category, 100 * progress
                                 / total));
                     }
@@ -190,7 +193,7 @@ public class PGet {
                         break;
                     }
                     System.err.println("\n\n");
-                    stream.provideProgress(reporter);
+                    stream.reportProgress(recorder);
                 }
             }
         }.start();

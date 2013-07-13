@@ -19,14 +19,18 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.oxcart.streams.ChecksummingInputStream;
-import org.oxcart.streams.IProgressReporter;
-import org.oxcart.streams.IValidatingInputStream;
+import org.oxcart.streams.IProgressRecorder;
+import org.oxcart.streams.ValidatingInputStream;
 import org.oxcart.streams.ParallelHttpGetInputStream;
 
 /**
- * &lt;p&gt;Downloads a file in parallel using one or more urls.&lt;/p&gt;
+ * &lt;p&gt;
+ * Downloads a file in parallel using one or more urls.
+ * &lt;/p&gt;
  * 
- * &lt;p&gt;For example:&lt;/p&gt;
+ * &lt;p&gt;
+ * For example:
+ * &lt;/p&gt;
  * 
  * &lt;pre&gt;
  * java org.oxcart.pget.PGet -c 04a1b0fc8a98999c6f78b35df9d8296996b5f6107c1b7f179c26a0496895b03f \
@@ -41,51 +45,51 @@ import org.oxcart.streams.ParallelHttpGetInputStream;
 public class PGet {
     private Options options;
     private CommandLine commandLine;
-<span class="nc" id="L44">    private AtomicBoolean finished = new AtomicBoolean(false);</span>
+<span class="nc" id="L48">    private AtomicBoolean finished = new AtomicBoolean(false);</span>
 
-<span class="nc" id="L46">    public PGet(String[] args) {</span>
-<span class="nc" id="L47">        options = new Options();</span>
-<span class="nc" id="L48">        options.addOption(&quot;?&quot;, &quot;help&quot;, false, &quot;Print this message&quot;);</span>
-<span class="nc" id="L49">        options.addOption(&quot;o&quot;, &quot;outfile&quot;, true,</span>
+<span class="nc" id="L50">    public PGet(String[] args) {</span>
+<span class="nc" id="L51">        options = new Options();</span>
+<span class="nc" id="L52">        options.addOption(&quot;?&quot;, &quot;help&quot;, false, &quot;Print this message&quot;);</span>
+<span class="nc" id="L53">        options.addOption(&quot;o&quot;, &quot;outfile&quot;, true,</span>
                           &quot;(Optional) Name of file to which to output downloaded file.  If not specified, data goes to stdout.&quot;);
-<span class="nc" id="L51">        options.addOption(&quot;t&quot;, &quot;threads&quot;, true,</span>
+<span class="nc" id="L55">        options.addOption(&quot;t&quot;, &quot;threads&quot;, true,</span>
                           &quot;(Optional) Number of concurrent threads to use for download.  Defaults to the number of urls.&quot;);
-<span class="nc" id="L53">        options.addOption(&quot;c&quot;, &quot;checksum&quot;, true, &quot;(Optional) SHA-256 checksum to use to validate result (hex encoded)&quot;);</span>
+<span class="nc" id="L57">        options.addOption(&quot;c&quot;, &quot;checksum&quot;, true, &quot;(Optional) SHA-256 checksum to use to validate result (hex encoded)&quot;);</span>
         try {
-<span class="nc" id="L55">            commandLine = new GnuParser().parse(options, args);</span>
-<span class="nc" id="L56">        } catch (ParseException parseException) {</span>
-<span class="nc" id="L57">            printUsage();</span>
-<span class="nc" id="L58">        }</span>
-<span class="nc" id="L59">    }</span>
+<span class="nc" id="L59">            commandLine = new GnuParser().parse(options, args);</span>
+<span class="nc" id="L60">        } catch (ParseException parseException) {</span>
+<span class="nc" id="L61">            printUsage();</span>
+<span class="nc" id="L62">        }</span>
+<span class="nc" id="L63">    }</span>
 
     /**
      * Fetch the download per the specified command-line options.
      */
     public void fetch() {
-<span class="nc" id="L65">        String[] urls = commandLine.getArgs();</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (commandLine.hasOption(&quot;help&quot;)) {</span>
-<span class="nc" id="L67">            printUsage();</span>
-<span class="nc bnc" id="L68" title="All 2 branches missed.">        } else if (urls.length == 0) {</span>
-<span class="nc" id="L69">            System.err.println(&quot;Please supply at least 1 url&quot;);</span>
-<span class="nc" id="L70">            printUsage();</span>
+<span class="nc" id="L69">        String[] urls = commandLine.getArgs();</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (commandLine.hasOption(&quot;help&quot;)) {</span>
+<span class="nc" id="L71">            printUsage();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        } else if (urls.length == 0) {</span>
+<span class="nc" id="L73">            System.err.println(&quot;Please supply at least 1 url&quot;);</span>
+<span class="nc" id="L74">            printUsage();</span>
         } else {
-<span class="nc" id="L72">            boolean valid = true;</span>
-<span class="nc" id="L73">            int numberOfThreads = urls.length;</span>
-<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (commandLine.hasOption(&quot;threads&quot;)) {</span>
-<span class="nc" id="L75">                numberOfThreads = Integer.parseInt(commandLine.getOptionValue(&quot;threads&quot;));</span>
+<span class="nc" id="L76">            boolean valid = true;</span>
+<span class="nc" id="L77">            int numberOfThreads = urls.length;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            if (commandLine.hasOption(&quot;threads&quot;)) {</span>
+<span class="nc" id="L79">                numberOfThreads = Integer.parseInt(commandLine.getOptionValue(&quot;threads&quot;));</span>
             }
-<span class="nc" id="L77">            ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);</span>
+<span class="nc" id="L81">            ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);</span>
             try {
-<span class="nc" id="L79">                valid = doFetch(executorService, urls);</span>
-<span class="nc" id="L80">            } catch (Exception e) {</span>
-<span class="nc" id="L81">                System.err.println(e.getMessage());</span>
-<span class="nc" id="L82">                e.printStackTrace(System.err);</span>
+<span class="nc" id="L83">                valid = doFetch(executorService, urls);</span>
+<span class="nc" id="L84">            } catch (Exception e) {</span>
+<span class="nc" id="L85">                System.err.println(e.getMessage());</span>
+<span class="nc" id="L86">                e.printStackTrace(System.err);</span>
             } finally {
-<span class="nc" id="L84">                executorService.shutdown();</span>
-<span class="nc" id="L85">            }</span>
-<span class="nc bnc" id="L86" title="All 2 branches missed.">            System.exit(valid ? 0 : 1);</span>
+<span class="nc" id="L88">                executorService.shutdown();</span>
+<span class="nc" id="L89">            }</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            System.exit(valid ? 0 : 1);</span>
         }
-<span class="nc" id="L88">    }</span>
+<span class="nc" id="L92">    }</span>
 
     /**
      * Perform the I/O activity for the download.
@@ -96,42 +100,42 @@ public class PGet {
      * @throws IOException
      */
     private boolean doFetch(ExecutorService executorService, String[] urls) throws IOException {
-<span class="nc" id="L99">        boolean valid = false;</span>
-<span class="nc" id="L100">        ParallelHttpGetInputStream parallelStream = new ParallelHttpGetInputStream(executorService, urls);</span>
-<span class="nc" id="L101">        IValidatingInputStream stream = parallelStream;</span>
-<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (commandLine.hasOption(&quot;checksum&quot;)) {</span>
+<span class="nc" id="L103">        boolean valid = false;</span>
+<span class="nc" id="L104">        ParallelHttpGetInputStream parallelStream = new ParallelHttpGetInputStream(executorService, urls);</span>
+<span class="nc" id="L105">        ValidatingInputStream stream = parallelStream;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (commandLine.hasOption(&quot;checksum&quot;)) {</span>
             // Add SHA-256 checksumming
             try {
-<span class="nc" id="L105">                stream = new ChecksummingInputStream(parallelStream, &quot;SHA-256&quot;,</span>
+<span class="nc" id="L109">                stream = new ChecksummingInputStream(parallelStream, &quot;SHA-256&quot;,</span>
                                                      Hex.decodeHex(commandLine.getOptionValue(&quot;checksum&quot;)
                                                                               .toCharArray()));
-<span class="nc" id="L108">            } catch (NoSuchAlgorithmException nsae) {</span>
-<span class="nc" id="L109">                System.err.println(&quot;WARNING: SHA-256 checksum not supported on this system, skipping checksumming&quot;);</span>
-<span class="nc" id="L110">            } catch (DecoderException de) {</span>
-<span class="nc" id="L111">                System.err.println(&quot;WARNING: Invalid SHA-256 checksum (not Hex encoded?), skipping checksumming&quot;);</span>
-<span class="nc" id="L112">            }</span>
+<span class="nc" id="L112">            } catch (NoSuchAlgorithmException nsae) {</span>
+<span class="nc" id="L113">                System.err.println(&quot;WARNING: SHA-256 checksum not supported on this system, skipping checksumming&quot;);</span>
+<span class="nc" id="L114">            } catch (DecoderException de) {</span>
+<span class="nc" id="L115">                System.err.println(&quot;WARNING: Invalid SHA-256 checksum (not Hex encoded?), skipping checksumming&quot;);</span>
+<span class="nc" id="L116">            }</span>
         }
         try {
-<span class="nc" id="L115">            trackProgress(parallelStream);</span>
-<span class="nc bnc" id="L116" title="All 2 branches missed.">            if (commandLine.hasOption(&quot;outfile&quot;)) {</span>
-<span class="nc" id="L117">                doFetchToFile(stream);</span>
+<span class="nc" id="L119">            trackProgress(parallelStream);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (commandLine.hasOption(&quot;outfile&quot;)) {</span>
+<span class="nc" id="L121">                doFetchToFile(stream);</span>
             } else {
-<span class="nc" id="L119">                doFetchToStandardOut(stream);</span>
+<span class="nc" id="L123">                doFetchToStandardOut(stream);</span>
             }
-<span class="nc" id="L121">            valid = stream.valid();</span>
-<span class="nc bnc" id="L122" title="All 2 branches missed.">            if (!valid) {</span>
-<span class="nc bnc" id="L123" title="All 2 branches missed.">                for (String errorMessage : stream.getValidationErrors()) {</span>
-<span class="nc" id="L124">                    System.err.println(&quot;WARNING: &quot; + errorMessage);</span>
-<span class="nc" id="L125">                }</span>
+<span class="nc" id="L125">            valid = stream.isValid();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            if (!valid) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                for (String errorMessage : stream.getValidationErrors()) {</span>
+<span class="nc" id="L128">                    System.err.println(&quot;WARNING: &quot; + errorMessage);</span>
+<span class="nc" id="L129">                }</span>
             }
         } finally {
-<span class="nc" id="L128">            try {</span>
-<span class="nc" id="L129">                finished.set(true);</span>
+<span class="nc" id="L132">            try {</span>
+<span class="nc" id="L133">                finished.set(true);</span>
             } finally {
-<span class="nc" id="L131">                stream.close();</span>
-<span class="nc" id="L132">            }</span>
-<span class="nc" id="L133">        }</span>
-<span class="nc" id="L134">        return valid;</span>
+<span class="nc" id="L135">                stream.close();</span>
+<span class="nc" id="L136">            }</span>
+<span class="nc" id="L137">        }</span>
+<span class="nc" id="L138">        return valid;</span>
     }
 
     /**
@@ -140,20 +144,19 @@ public class PGet {
      * @param stream
      * @throws IOException
      */
-    private void doFetchToFile(IValidatingInputStream stream) throws IOException {
+    private void doFetchToFile(ValidatingInputStream stream) throws IOException {
         // Write to out file
-<span class="nc" id="L145">        File file = new File(commandLine.getOptionValue(&quot;outfile&quot;));</span>
-<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (file.exists()) {</span>
-<span class="nc" id="L147">            file.delete();</span>
+<span class="nc" id="L149">        File file = new File(commandLine.getOptionValue(&quot;outfile&quot;));</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        if (file.exists()) {</span>
+<span class="nc" id="L151">            file.delete();</span>
         }
-<span class="nc" id="L149">        BufferedOutputStream out = new BufferedOutputStream(</span>
-                                                            new FileOutputStream(file));
+<span class="nc" id="L153">        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));</span>
         try {
-<span class="nc" id="L152">            IOUtils.copy(stream, out);</span>
+<span class="nc" id="L155">            IOUtils.copy(stream, out);</span>
         } finally {
-<span class="nc" id="L154">            out.close();</span>
-<span class="nc" id="L155">        }</span>
-<span class="nc" id="L156">    }</span>
+<span class="nc" id="L157">            out.close();</span>
+<span class="nc" id="L158">        }</span>
+<span class="nc" id="L159">    }</span>
 
     /**
      * Fetch the download and write to stdout.
@@ -161,10 +164,10 @@ public class PGet {
      * @param stream
      * @throws IOException
      */
-    private void doFetchToStandardOut(IValidatingInputStream stream) throws IOException {
+    private void doFetchToStandardOut(ValidatingInputStream stream) throws IOException {
         // Write to standard out
-<span class="nc" id="L166">        IOUtils.copy(stream, System.out);</span>
-<span class="nc" id="L167">    }</span>
+<span class="nc" id="L169">        IOUtils.copy(stream, System.out);</span>
+<span class="nc" id="L170">    }</span>
 
     /**
      * Asynchronously track the progress of the download.
@@ -172,42 +175,42 @@ public class PGet {
      * @param stream
      */
     private void trackProgress(final ParallelHttpGetInputStream stream) {
-<span class="nc" id="L175">        new Thread() {</span>
+<span class="nc" id="L178">        new Thread() {</span>
             @Override
             public void run() {
-<span class="nc" id="L178">                IProgressReporter reporter = new IProgressReporter() {</span>
+<span class="nc" id="L181">                IProgressRecorder recorder = new IProgressRecorder() {</span>
                     @Override
-                    public void report(String name, String category, double total, double progress) {
-<span class="nc" id="L181">                        System.err.println(String.format(&quot;%1$s (%2$s) %3$.0f %%&quot;, name, category, 100 * progress</span>
+                    public void record(String name, String category, double total, double progress) {
+<span class="nc" id="L184">                        System.err.println(String.format(&quot;%1$s (%2$s) %3$.0f %%&quot;, name, category, 100 * progress</span>
                                 / total));
-<span class="nc" id="L183">                    }</span>
+<span class="nc" id="L186">                    }</span>
                 };
-<span class="nc bnc" id="L185" title="All 2 branches missed.">                while (!finished.get()) {</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                while (!finished.get()) {</span>
                     // Wait 1 second between progress reports
                     try {
-<span class="nc" id="L188">                        Thread.sleep(1000);</span>
-<span class="nc" id="L189">                    } catch (InterruptedException ie) {</span>
-<span class="nc" id="L190">                        break;</span>
-<span class="nc" id="L191">                    }</span>
-<span class="nc" id="L192">                    System.err.println(&quot;\n\n&quot;);</span>
-<span class="nc" id="L193">                    stream.provideProgress(reporter);</span>
+<span class="nc" id="L191">                        Thread.sleep(1000);</span>
+<span class="nc" id="L192">                    } catch (InterruptedException ie) {</span>
+<span class="nc" id="L193">                        break;</span>
+<span class="nc" id="L194">                    }</span>
+<span class="nc" id="L195">                    System.err.println(&quot;\n\n&quot;);</span>
+<span class="nc" id="L196">                    stream.reportProgress(recorder);</span>
                 }
-<span class="nc" id="L195">            }</span>
+<span class="nc" id="L198">            }</span>
         }.start();
-<span class="nc" id="L197">    }</span>
+<span class="nc" id="L200">    }</span>
 
     private void printUsage() {
-<span class="nc" id="L200">        String command = &quot;pget [options] url1, url2, ...&quot;;</span>
-<span class="nc" id="L201">        PrintWriter writer = new PrintWriter(System.err);</span>
-<span class="nc" id="L202">        HelpFormatter helpFormatter = new HelpFormatter();</span>
-<span class="nc" id="L203">        helpFormatter.printHelp(writer, 80, command,</span>
+<span class="nc" id="L203">        String command = &quot;pget [options] url1, url2, ...&quot;;</span>
+<span class="nc" id="L204">        PrintWriter writer = new PrintWriter(System.err);</span>
+<span class="nc" id="L205">        HelpFormatter helpFormatter = new HelpFormatter();</span>
+<span class="nc" id="L206">        helpFormatter.printHelp(writer, 80, command,</span>
                                 &quot;pget downloads a file in parallel from one or more supplied urls\n&quot;, options, 2, 2, &quot;&quot;);
-<span class="nc" id="L205">        writer.print(&quot;\n\n&quot;);</span>
-<span class="nc" id="L206">        writer.close();</span>
-<span class="nc" id="L207">    }</span>
+<span class="nc" id="L208">        writer.print(&quot;\n\n&quot;);</span>
+<span class="nc" id="L209">        writer.close();</span>
+<span class="nc" id="L210">    }</span>
 
     public static void main(String[] args) throws Exception {
-<span class="nc" id="L210">        new PGet(args).fetch();</span>
-<span class="nc" id="L211">    }</span>
+<span class="nc" id="L213">        new PGet(args).fetch();</span>
+<span class="nc" id="L214">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.2.201302030002</span></div></body></html>
