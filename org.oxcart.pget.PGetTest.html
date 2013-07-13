@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta httpEquiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>Test results - Class org.oxcart.pget.PGetTest</title>
+<link href="base-style.css" rel="stylesheet" type="text/css"/>
+<link href="style.css" rel="stylesheet" type="text/css"/>
+<script src="report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>Class org.oxcart.pget.PGetTest</h1>
+<div class="breadcrumbs">
+<a href="index.html">all</a> &gt; 
+<a href="org.oxcart.pget.html">org.oxcart.pget</a> &gt; PGetTest</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">8</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">3.755s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Tests</a>
+</li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
+<li>
+<a href="#tab2">Standard error</a>
+</li>
+</ul>
+<div id="tab0" class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">testChecksumFailure</td>
+<td>0.304s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testFailureBecauseOfBadFile</td>
+<td>0.245s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testHelp</td>
+<td>0.191s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testMissingUrls</td>
+<td>0.240s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSuccessToFileWithChecksum</td>
+<td>0.322s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSuccessToFileWithInvalidChecksum</td>
+<td>1.870s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSuccessToFileWithoutChecksum</td>
+<td>0.288s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSuccessToStandardout</td>
+<td>0.295s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>1234567890ABCDEFGHIJ</pre>
+</span>
+</div>
+<div id="tab2" class="tab">
+<h2>Standard error</h2>
+<span class="code">
+<pre>2013-07-13 13:36:59.673:INFO::Logging to STDERR via org.mortbay.log.StdErrLog
+2013-07-13 13:36:59.836:INFO::jetty-6.1.26
+2013-07-13 13:36:59.879:INFO::Started DelayableSocketConnector@0.0.0.0:8089
+log4j:WARN No appenders could be found for logger (org.apache.http.impl.conn.PoolingClientConnectionManager).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+2013-07-13 13:37:00.765:INFO:/__admin:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.AdminRequestHandler
+2013-07-13 13:37:01.196:INFO:/:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.StubRequestHandler
+WARNING: Invalid SHA-256 checksum (not Hex encoded?), skipping checksumming
+2013-07-13 13:37:01.254:INFO::Stopped DelayableSocketConnector@0.0.0.0:8089
+2013-07-13 13:37:01.259:INFO::jetty-6.1.26
+2013-07-13 13:37:01.261:INFO::Started DelayableSocketConnector@0.0.0.0:8089
+2013-07-13 13:37:01.274:INFO:/__admin:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.AdminRequestHandler
+2013-07-13 13:37:01.501:INFO:/:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.StubRequestHandler
+WARNING: Checksum failure.
+
+Expected: 03a40a85e666e88489e7e872a95df91614b12bf66b858d8fa65b6940c5a973fa
+Actual:   39cc4e7410ee75e49d98666adb26e928cf252c35fff90273a176cd74b19d9c8e
+2013-07-13 13:37:01.560:INFO::Stopped DelayableSocketConnector@0.0.0.0:8089
+2013-07-13 13:37:01.564:INFO::jetty-6.1.26
+2013-07-13 13:37:01.567:INFO::Started DelayableSocketConnector@0.0.0.0:8089
+2013-07-13 13:37:01.576:INFO:/__admin:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.AdminRequestHandler
+usage: pget [options] url1, url2, ...
+pget downloads a file in parallel from one or more supplied urls
+
+  -?,--help            Print this message
+  -c,--checksum &lt;arg&gt;  (Optional) SHA-256 checksum to use to validate result
+                       (hex encoded)
+  -o,--outfile &lt;arg&gt;   (Optional) Name of file to which to output downloaded
+                       file.  If not specified, data goes to stdout.
+  -t,--threads &lt;arg&gt;   (Optional) Number of concurrent threads to use for
+                       download.  Defaults to the number of urls.
+
+
+2013-07-13 13:37:01.769:INFO:/__admin:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.AdminRequestHandler
+2013-07-13 13:37:01.916:INFO:/:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.StubRequestHandler
+2013-07-13 13:37:02.105:INFO:/__admin:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.AdminRequestHandler
+
+
+
+http://localhost:8089/good1 (Buffered) 100 %
+http://localhost:8089/good2 (Buffered) 100 %
+2013-07-13 13:37:02.251:INFO:/:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.StubRequestHandler
+2013-07-13 13:37:02.377:INFO:/__admin:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.AdminRequestHandler
+
+
+
+http://localhost:8089/good1 (Buffered) 100 %
+http://localhost:8089/good2 (Buffered) 100 %
+2013-07-13 13:37:02.617:INFO:/__admin:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.AdminRequestHandler
+2013-07-13 13:37:02.739:INFO:/:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.StubRequestHandler
+2013-07-13 13:37:02.864:INFO:/__admin:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.AdminRequestHandler
+
+
+
+http://localhost:8089/good1 (Buffered) 100 %
+http://localhost:8089/good2 (Buffered) 100 %
+2013-07-13 13:37:02.983:INFO:/:RequestHandlerClass from context returned com.github.tomakehurst.wiremock.http.StubRequestHandler
+</pre>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>Generated by 
+<a href="http://www.gradle.org">Gradle 1.6</a> at Jul 13, 2013 1:37:04 PM</p>
+</div>
+</div>
+</body>

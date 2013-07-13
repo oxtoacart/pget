@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ValidatingInputStream.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pget</a> &gt; <a href="index.html" class="el_package">org.oxcart.streams</a> &gt; <span class="el_source">ValidatingInputStream.java</span></div><h1>ValidatingInputStream.java</h1><pre class="source lang-java linenums">package org.oxcart.streams;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * An InputStream that can validate itself.
+ * 
+ * @author ox.to.a.cart /at/ gmail.com
+ * 
+ */
+<span class="fc" id="L13">public abstract class ValidatingInputStream extends InputStream {</span>
+<span class="fc" id="L14">    private List&lt;String&gt; validationErrors = new ArrayList&lt;String&gt;();</span>
+
+    /**
+     * Check if this stream is valid.
+     * 
+     * @return
+     */
+    public final boolean isValid() {
+<span class="fc" id="L22">        validationErrors.clear();</span>
+<span class="fc" id="L23">        collectValidationErrors(validationErrors);</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        return validationErrors.size() == 0;</span>
+    }
+
+    /**
+     * Get any validation errors (make sure to call valid() first).
+     * 
+     * @return
+     */
+    public List&lt;String&gt; getValidationErrors() {
+<span class="fc" id="L33">        return validationErrors;</span>
+    }
+
+    /**
+     * Implement this and record any validation errors in list.
+     * 
+     * @param validationErrors
+     */
+    protected abstract void collectValidationErrors(List&lt;String&gt; validationErrors);
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.2.201302030002</span></div></body></html>

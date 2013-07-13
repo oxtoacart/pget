@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PGet.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pget</a> &gt; <a href="index.html" class="el_package">org.oxcart.pget</a> &gt; <span class="el_source">PGet.java</span></div><h1>PGet.java</h1><pre class="source lang-java linenums">package org.oxcart.pget;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.IOUtils;
+import org.oxcart.streams.ChecksummingInputStream;
+import org.oxcart.streams.IProgressRecorder;
+import org.oxcart.streams.ParallelHttpGetInputStream;
+import org.oxcart.streams.ValidatingInputStream;
+
+/**
+ * &lt;p&gt;
+ * Downloads a file in parallel using one or more urls.
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * For example:
+ * &lt;/p&gt;
+ * 
+ * &lt;pre&gt;
+ * java org.oxcart.pget.PGet -c 04a1b0fc8a98999c6f78b35df9d8296996b5f6107c1b7f179c26a0496895b03f \
+ *      &quot;https://lantern.s3.amazonaws.com/lantern-video-broadband.m4v&quot; \
+ *      &quot;https://dl.dropboxusercontent.com/s/rxnpmdrs2jms193/lantern-video-broadband.m4v&quot; \
+ *      &gt; /tmp/downloaded_file.m4v
+ * &lt;/pre&gt;
+ * 
+ * @author ox.to.a.cart /at/ gmail.com
+ * 
+ */
+public class PGet {
+    private static final String SHA_256 = &quot;SHA-256&quot;;
+
+    private Options options;
+    private CommandLine commandLine;
+<span class="fc" id="L50">    private AtomicBoolean finished = new AtomicBoolean(false);</span>
+
+<span class="fc" id="L52">    public PGet(String... args) {</span>
+<span class="fc" id="L53">        options = new Options();</span>
+<span class="fc" id="L54">        options.addOption(&quot;?&quot;, &quot;help&quot;, false, &quot;Print this message&quot;);</span>
+<span class="fc" id="L55">        options.addOption(&quot;o&quot;, &quot;outfile&quot;, true,</span>
+                          &quot;(Optional) Name of file to which to output downloaded file.  If not specified, data goes to stdout.&quot;);
+<span class="fc" id="L57">        options.addOption(&quot;t&quot;, &quot;threads&quot;, true,</span>
+                          &quot;(Optional) Number of concurrent threads to use for download.  Defaults to the number of urls.&quot;);
+<span class="fc" id="L59">        options.addOption(&quot;c&quot;, &quot;checksum&quot;, true, &quot;(Optional) SHA-256 checksum to use to validate result (hex encoded)&quot;);</span>
+        try {
+<span class="fc" id="L61">            commandLine = new GnuParser().parse(options, args);</span>
+<span class="nc" id="L62">        } catch (ParseException pe) {</span>
+<span class="nc" id="L63">            printUsage();</span>
+<span class="nc" id="L64">            throw new RuntimeException(&quot;Unable to parse args: &quot; + pe.getMessage(), pe);</span>
+<span class="fc" id="L65">        }</span>
+<span class="fc" id="L66">    }</span>
+
+    /**
+     * Fetch the download per the specified command-line options.
+     */
+    public int fetch() {
+<span class="fc" id="L72">        String[] urls = commandLine.getArgs();</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (commandLine.hasOption(&quot;help&quot;)) {</span>
+<span class="fc" id="L74">            printUsage();</span>
+<span class="fc" id="L75">            return 0;</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        } else if (urls.length == 0) {</span>
+<span class="fc" id="L77">            System.err.println(&quot;Please supply at least 1 url&quot;);</span>
+<span class="fc" id="L78">            printUsage();</span>
+<span class="fc" id="L79">            return 1;</span>
+        } else {
+<span class="fc" id="L81">            boolean valid = true;</span>
+<span class="fc" id="L82">            int numberOfThreads = urls.length;</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">            if (commandLine.hasOption(&quot;threads&quot;)) {</span>
+<span class="nc" id="L84">                numberOfThreads = Integer.parseInt(commandLine.getOptionValue(&quot;threads&quot;));</span>
+            }
+<span class="fc" id="L86">            ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);</span>
+            try {
+<span class="fc" id="L88">                valid = doFetch(executorService, urls);</span>
+<span class="fc" id="L89">            } catch (Exception e) {</span>
+<span class="fc" id="L90">                System.err.println(e.getMessage());</span>
+<span class="fc" id="L91">                e.printStackTrace(System.err);</span>
+<span class="fc" id="L92">                return 3;</span>
+            } finally {
+<span class="pc" id="L94">                executorService.shutdown();</span>
+<span class="fc" id="L95">            }</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            return valid ? 0 : 2;</span>
+        }
+    }
+
+    /**
+     * Perform the I/O activity for the download.
+     * 
+     * @param executorService
+     * @param urls
+     * @return
+     * @throws IOException
+     */
+    private boolean doFetch(ExecutorService executorService, String[] urls) throws IOException {
+<span class="fc" id="L109">        boolean valid = false;</span>
+<span class="fc" id="L110">        ParallelHttpGetInputStream parallelStream = new ParallelHttpGetInputStream(executorService, urls);</span>
+<span class="fc" id="L111">        ValidatingInputStream stream = parallelStream;</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (commandLine.hasOption(&quot;checksum&quot;)) {</span>
+            // Add SHA-256 checksumming
+            try {
+<span class="fc" id="L115">                stream = new ChecksummingInputStream(parallelStream, SHA_256,</span>
+                                                     Hex.decodeHex(commandLine.getOptionValue(&quot;checksum&quot;)
+                                                                              .toCharArray()));
+<span class="nc" id="L118">            } catch (NoSuchAlgorithmException nsae) {</span>
+<span class="nc" id="L119">                System.err.println(&quot;WARNING: SHA-256 checksum not supported on this system, skipping checksumming&quot;);</span>
+<span class="fc" id="L120">            } catch (DecoderException de) {</span>
+<span class="fc" id="L121">                System.err.println(&quot;WARNING: Invalid SHA-256 checksum (not Hex encoded?), skipping checksumming&quot;);</span>
+<span class="pc" id="L122">            }</span>
+        }
+        try {
+<span class="fc" id="L125">            trackProgress(parallelStream);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (commandLine.hasOption(&quot;outfile&quot;)) {</span>
+<span class="fc" id="L127">                doFetchToFile(stream);</span>
+            } else {
+<span class="fc" id="L129">                doFetchToStandardOut(stream);</span>
+            }
+<span class="fc" id="L131">            valid = stream.isValid();</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            if (!valid) {</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">                for (String errorMessage : stream.getValidationErrors()) {</span>
+<span class="fc" id="L134">                    System.err.println(&quot;WARNING: &quot; + errorMessage);</span>
+<span class="fc" id="L135">                }</span>
+            }
+        } finally {
+<span class="fc" id="L138">            try {</span>
+<span class="fc" id="L139">                finished.set(true);</span>
+            } finally {
+<span class="pc" id="L141">                stream.close();</span>
+<span class="fc" id="L142">            }</span>
+<span class="fc" id="L143">        }</span>
+<span class="fc" id="L144">        return valid;</span>
+    }
+
+    /**
+     * Fetch the download into a file.
+     * 
+     * @param stream
+     * @throws IOException
+     */
+    private void doFetchToFile(ValidatingInputStream stream) throws IOException {
+        // Write to out file
+<span class="fc" id="L155">        File file = new File(commandLine.getOptionValue(&quot;outfile&quot;));</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (file.exists()) {</span>
+<span class="nc" id="L157">            file.delete();</span>
+        }
+<span class="fc" id="L159">        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));</span>
+        try {
+<span class="fc" id="L161">            IOUtils.copy(stream, out);</span>
+        } finally {
+<span class="pc" id="L163">            out.close();</span>
+<span class="fc" id="L164">        }</span>
+<span class="fc" id="L165">    }</span>
+
+    /**
+     * Fetch the download and write to stdout.
+     * 
+     * @param stream
+     * @throws IOException
+     */
+    private void doFetchToStandardOut(ValidatingInputStream stream) throws IOException {
+        // Write to standard out
+<span class="fc" id="L175">        IOUtils.copy(stream, System.out);</span>
+<span class="fc" id="L176">    }</span>
+
+    /**
+     * Asynchronously track the progress of the download.
+     * 
+     * @param stream
+     */
+    private void trackProgress(final ParallelHttpGetInputStream stream) {
+<span class="fc" id="L184">        new Thread() {</span>
+            @Override
+            public void run() {
+<span class="fc" id="L187">                IProgressRecorder recorder = new IProgressRecorder() {</span>
+                    @Override
+                    public void record(String name, String category, double total, double progress) {
+<span class="fc" id="L190">                        System.err.println(String.format(&quot;%1$s (%2$s) %3$.0f %%&quot;, name, category, 100 * progress</span>
+                                / total));
+<span class="fc" id="L192">                    }</span>
+                };
+<span class="fc bfc" id="L194" title="All 2 branches covered.">                while (!finished.get()) {</span>
+                    // Wait 1 second between progress reports
+                    try {
+<span class="fc" id="L197">                        Thread.sleep(1000);</span>
+<span class="nc" id="L198">                    } catch (InterruptedException ie) {</span>
+<span class="nc" id="L199">                        break;</span>
+<span class="fc" id="L200">                    }</span>
+<span class="fc" id="L201">                    System.err.println(&quot;\n\n&quot;);</span>
+<span class="fc" id="L202">                    stream.reportProgress(recorder);</span>
+                }
+<span class="fc" id="L204">            }</span>
+        }.start();
+<span class="fc" id="L206">    }</span>
+
+    private void printUsage() {
+<span class="fc" id="L209">        String command = &quot;pget [options] url1, url2, ...&quot;;</span>
+<span class="fc" id="L210">        PrintWriter writer = new PrintWriter(System.err);</span>
+<span class="fc" id="L211">        HelpFormatter helpFormatter = new HelpFormatter();</span>
+<span class="fc" id="L212">        helpFormatter.printHelp(writer, 80, command,</span>
+                                &quot;pget downloads a file in parallel from one or more supplied urls\n&quot;, options, 2, 2, &quot;&quot;);
+<span class="fc" id="L214">        writer.print(&quot;\n\n&quot;);</span>
+<span class="fc" id="L215">        writer.close();</span>
+<span class="fc" id="L216">    }</span>
+
+    public static void main(String[] args) throws Exception {
+<span class="nc" id="L219">        System.exit(new PGet(args).fetch());</span>
+<span class="nc" id="L220">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.2.201302030002</span></div></body></html>

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ParallelHttpGetInputStream.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pget</a> &gt; <a href="index.html" class="el_package">org.oxcart.streams</a> &gt; <span class="el_source">ParallelHttpGetInputStream.java</span></div><h1>ParallelHttpGetInputStream.java</h1><pre class="source lang-java linenums">package org.oxcart.streams;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+
+/**
+ * An InputStream that reads a resource in parallel from multiple urls by fetching ranges of the file on multiple
+ * threads.
+ * 
+ * @author ox.to.a.cart /at/ gmail.com
+ * 
+ */
+public class ParallelHttpGetInputStream extends ValidatingInputStream implements IProgressReporter {
+    private ExecutorService executorService;
+    private HttpClient httpClient;
+    private List&lt;Resource&gt; resources;
+    private MergedInputStream inputStream;
+    private List&lt;ReadAheadInputStream&gt; contentInputStreams;
+    private List&lt;Integer&gt; expectedContentLengths;
+
+    /**
+     * Construct a stream to fetch a single resource from multiple urls in parallel, using the given ExecutorService to
+     * perform the parallel fetches.
+     * 
+     * @param executorService
+     * @param urls
+     * @throws IOException
+     */
+<span class="fc" id="L46">    public ParallelHttpGetInputStream(ExecutorService executorService, String... urls) throws IOException {</span>
+<span class="fc" id="L47">        this.executorService = executorService;</span>
+<span class="fc" id="L48">        initHttpClient();</span>
+<span class="fc" id="L49">        buildResources(urls);</span>
+<span class="fc" id="L50">        ensureResourcesAreCompatible();</span>
+<span class="fc" id="L51">        open();</span>
+<span class="fc" id="L52">    }</span>
+
+    @Override
+    public int read() throws IOException {
+<span class="fc" id="L56">        return inputStream.read();</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+<span class="fc" id="L61">        inputStream.close();</span>
+<span class="fc" id="L62">    }</span>
+
+    public int getContentLength() {
+<span class="fc" id="L65">        return resources.get(0).contentLength;</span>
+    }
+
+    public int getBytesRead() {
+<span class="fc" id="L69">        return inputStream.getBytesRead();</span>
+    }
+
+    @Override
+    public void reportProgress(IProgressRecorder recorder) {
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        for (int i = 0; i &lt; contentInputStreams.size(); i++) {</span>
+<span class="fc" id="L75">            recorder.record(resources.get(i).url,</span>
+                            &quot;Buffered&quot;,
+                            expectedContentLengths.get(i),
+                            contentInputStreams.get(i).getBufferedBytes());
+        }
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * Validate the results of the download. This method should be called only after reading all bytes from this stream.
+     * 
+     * @return
+     */
+    @Override
+    protected void collectValidationErrors(List&lt;String&gt; validationErrors) {
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (getBytesRead() != getContentLength()) {</span>
+<span class="fc" id="L90">            validationErrors.add(String.format(&quot;WARNING - Amount of read content did not match expected content length, data may be corrupted.  Expected %1$s, read %2$s&quot;,</span>
+                                               getContentLength(), getBytesRead()));
+        }
+<span class="fc" id="L93">    }</span>
+
+    private void initHttpClient() {
+<span class="fc" id="L96">        SchemeRegistry schemeRegistry = new SchemeRegistry();</span>
+<span class="fc" id="L97">        schemeRegistry.register(</span>
+                      new Scheme(&quot;http&quot;, 80, PlainSocketFactory.getSocketFactory()));
+<span class="fc" id="L99">        schemeRegistry.register(</span>
+                      new Scheme(&quot;https&quot;, 443, SSLSocketFactory.getSocketFactory()));
+
+<span class="fc" id="L102">        PoolingClientConnectionManager cm = new PoolingClientConnectionManager(schemeRegistry);</span>
+<span class="fc" id="L103">        cm.setDefaultMaxPerRoute(16);</span>
+<span class="fc" id="L104">        cm.setMaxTotal(64);</span>
+<span class="fc" id="L105">        this.httpClient = new DefaultHttpClient(cm);</span>
+<span class="fc" id="L106">    }</span>
+
+    private void buildResources(String[] urls) throws IOException {
+<span class="fc" id="L109">        this.resources = new ArrayList&lt;Resource&gt;();</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (String url : urls) {</span>
+<span class="fc" id="L111">            Resource resource = new Resource(url);</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (!resource.acceptsRangeRequests) {</span>
+<span class="fc" id="L113">                throw new IOException(String.format(&quot;Resource does not allow range requests: %1$s&quot;, resource.url));</span>
+            }
+<span class="fc" id="L115">            resources.add(resource);</span>
+        }
+<span class="fc" id="L117">    }</span>
+
+    private void ensureResourcesAreCompatible() throws IOException {
+<span class="fc" id="L120">        Resource previousResource = null;</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        for (Resource nextResource : resources) {</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">            if (previousResource != null) {</span>
+<span class="fc" id="L123">                previousResource.ensureCompatibleWith(nextResource);</span>
+            }
+<span class="fc" id="L125">            previousResource = nextResource;</span>
+<span class="fc" id="L126">        }</span>
+<span class="fc" id="L127">    }</span>
+
+    private void open() throws IOException {
+<span class="fc" id="L130">        contentInputStreams = new ArrayList&lt;ReadAheadInputStream&gt;();</span>
+<span class="fc" id="L131">        expectedContentLengths = new ArrayList&lt;Integer&gt;();</span>
+        // Figure out size of each segment to download
+<span class="fc" id="L133">        int segmentSize = getContentLength() / resources.size();</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        for (int i = 0; i &lt; resources.size(); i++) {</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            boolean onLastSegment = i == resources.size() - 1;</span>
+<span class="fc" id="L136">            final int currentOffset = i * segmentSize;</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">            final int end = onLastSegment ? getContentLength() : (i + 1) * segmentSize;</span>
+<span class="fc" id="L138">            final Resource resource = resources.get(i);</span>
+<span class="fc" id="L139">            contentInputStreams.add(ReadAheadInputStream.open(new IStreamProvider() {</span>
+                @Override
+                public InputStream openStream() throws IOException {
+<span class="fc" id="L142">                    return resource.fetchRange(currentOffset, end);</span>
+                }
+            }, executorService));
+<span class="fc" id="L145">            expectedContentLengths.add(end - currentOffset);</span>
+        }
+<span class="fc" id="L147">        this.inputStream = new MergedInputStream(</span>
+                                                 contentInputStreams.toArray(new InputStream[contentInputStreams.size()]));
+<span class="fc" id="L149">    }</span>
+
+    /**
+     * Represents a resource which will be used to fetch part of the download.
+     * 
+     * @author ox.to.a.cart /at/ gmail.com
+     * 
+     */
+    private class Resource {
+        private String url;
+        private HttpContext context;
+        private int contentLength;
+        private boolean acceptsRangeRequests;
+
+<span class="fc" id="L163">        public Resource(String url) throws IOException {</span>
+<span class="fc" id="L164">            this.url = url;</span>
+<span class="fc" id="L165">            this.context = new BasicHttpContext();</span>
+<span class="fc" id="L166">            HttpHead method = new HttpHead(url);</span>
+<span class="fc" id="L167">            HttpResponse response = httpClient.execute(method, context);</span>
+<span class="fc" id="L168">            int statusCode = response.getStatusLine().getStatusCode();</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">            if (statusCode != 200) {</span>
+<span class="nc" id="L170">                throw new IOException(</span>
+                                      String.format(&quot;Unrecognized response on attempting to get resource HEAD information. Expected 200, got %1$s&quot;,
+                                                    statusCode));
+            }
+<span class="fc" id="L174">            contentLength = Integer.parseInt(response.getFirstHeader(&quot;Content-Length&quot;).getValue());</span>
+            // Per RFC 2616, we assume that range requests are accepted unless the server explicitly says they aren't
+<span class="fc" id="L176">            Header acceptRangesHeader = response.getFirstHeader(&quot;Accept-Ranges&quot;);</span>
+<span class="fc bfc" id="L177" title="All 4 branches covered.">            acceptsRangeRequests = acceptRangesHeader == null</span>
+                    || !&quot;none&quot;.equalsIgnoreCase(acceptRangesHeader.getValue().trim());
+<span class="fc" id="L179">        }</span>
+
+        /**
+         * Fetches a section of the resource specified by the given range (in bytes).
+         * 
+         * @param start
+         *            start of range (inclusive)
+         * @param end
+         *            end of range (exclusive)
+         * @return
+         * @throws IOException
+         */
+        public InputStream fetchRange(int start, int end) throws IOException {
+<span class="fc" id="L192">            HttpGet method = new HttpGet(url);</span>
+<span class="fc" id="L193">            method.addHeader(&quot;Range&quot;, String.format(&quot;bytes=%1$s-%2$s&quot;, start, end - 1));</span>
+<span class="fc" id="L194">            HttpResponse response = httpClient.execute(method, context);</span>
+<span class="fc" id="L195">            int statusCode = response.getStatusLine().getStatusCode();</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">            if (statusCode != 206) {</span>
+<span class="nc" id="L197">                throw new IOException(</span>
+                                      String.format(&quot;Unrecognized response on attempting to issue range GET. Expected 206, got %1$s&quot;,
+                                                    statusCode));
+            }
+<span class="fc" id="L201">            return response.getEntity().getContent();</span>
+        }
+
+        /**
+         * Two resources are considered compatible if their content lengths match.
+         * 
+         * @param other
+         * @return
+         */
+        public void ensureCompatibleWith(Resource other) throws IOException {
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">            if (contentLength != other.contentLength) {</span>
+<span class="nc" id="L212">                throw new IOException(String.format(&quot;Content-Length for resources '%1$s' and '%2$s' did not match&quot;,</span>
+                                                    url, other.url));
+            }
+<span class="fc" id="L215">        }</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.2.201302030002</span></div></body></html>
