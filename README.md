@@ -19,9 +19,9 @@ cd pget
 
 ## Reports and Documentation
 
-<a href="oxtoacart.github.io/pget/javadoc/index.html">JavaDoc</a>
-<a href="oxtoacart.github.io/pget/tests/index.html">Test Reports</a>
-<a href="oxtoacart.github.io/pget/jacoco/test/html/index.html">Code Coverage</a>
+[JavaDoc](http://oxtoacart.github.io/pget/javadoc/index.html)
+[Test Reports](http://oxtoacart.github.io/pget/tests/index.html)
+[Code Coverage](oxtoacart.github.io/pget/jacoco/test/html/index.html)
 
 ## Building
 
