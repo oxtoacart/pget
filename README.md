@@ -9,7 +9,7 @@ In addition to being a utility, the core functionality is also available for use
 
 ## Quick Start
 
-This quick start shows you how to get pget, download a file from two separate locations in parallel and pipe it into /tmp/downloaded_file.m4v.
+This quick start shows you how to get pget, download a file from two separate locations in parallel and pipe it into /tmp/downloaded_file.m4v, also checking to make sure that the downloaded file matches a SHA-256 checksum (hex encoded).
 
 From a UNIX shell:
 
